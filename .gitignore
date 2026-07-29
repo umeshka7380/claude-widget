@@ -10,6 +10,9 @@ check-autostart.out
 # Pacote gerado por `npm run empacotar`
 claude-widget.zip
 
+# Instalador gerado por `npm run dist`
+/release/
+
 # Cache de ferramentas locais
 .impeccable/
 
