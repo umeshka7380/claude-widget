@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'self'">
+<title>Consumo Claude Code</title>
+<style>
+  :root{
+    --panel:#1B1815; --panel-hi:#241F1B; --well:#100E0C; --foot:#100E0C;
+    --line:rgba(255,240,225,.09); --line-hard:rgba(255,240,225,.16);
+    --text:#EDE6DE; --muted:#9A8F84; --faint:#6E655C;
+    --copper:#C6703C; --copper-dim:rgba(198,112,60,.22);
+    --ok:#4FA37C; --warn:#D6A03D; --crit:#CF4E42;
+    --display:"Bahnschrift","DIN Alternate","Segoe UI Semibold",system-ui,sans-serif;
+    --body:"Segoe UI Variable Text","Segoe UI",system-ui,sans-serif;
+    --mono:"Cascadia Mono","Consolas",ui-monospace,monospace;
+  }
+  /* tons do mockup: creme quente, barra de topo mais clara que o corpo,
+     calhas em bege. Verde escuro nos medidores, cobre so nos creditos. */
+  :root[data-theme="light"]{
+    --panel:#FAF6EF; --panel-hi:#FEFCF8; --well:#EBE4D8; --foot:#F4EEE3;
+    --line:rgba(58,44,30,.12); --line-hard:rgba(58,44,30,.20);
+    --text:#2A231C; --muted:#6B6055; --faint:#9A8D7E;
+    --copper:#B4622C; --copper-dim:rgba(180,98,44,.16);
+    --ok:#2E7D5B; --warn:#9A6F16; --crit:#AF3A30;
+  }
+
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:transparent;overflow:hidden}
+  body{
+    font-family:var(--body); font-size:15px; color:var(--text);
+    -webkit-font-smoothing:antialiased; user-select:none; cursor:default;
+  }
+  .widget{background:var(--panel); border-radius:10px; overflow:hidden}
+
+  .titlebar{
+    display:flex; align-items:center; gap:10px; padding:9px 10px 9px 12px;
+    background:var(--panel-hi); border-bottom:1px solid var(--line);
+    app-region:drag; -webkit-app-region:drag;
+  }
+  .grip{width:16px;height:10px;flex:none;background-image:radial-gradient(circle,var(--faint) 1px,transparent 1.2px);background-size:5px 5px;opacity:.85}
+  .who{font-family:var(--mono);font-size:10.5px;letter-spacing:.13em;text-transform:uppercase;color:var(--muted);margin-right:auto;white-space:nowrap}
+  .who b{color:var(--copper);font-weight:600}
+  .ctl{
+    width:22px;height:22px;border:0;border-radius:5px;background:transparent;color:var(--faint);
+    display:grid;place-items:center;cursor:pointer;font-size:12px;line-height:1;padding:0;
+    app-region:no-drag; -webkit-app-region:no-drag; font-family:var(--body);
+  }
+  .ctl:hover{background:rgba(128,128,128,.16);color:var(--text)}
+  .ctl:focus-visible{outline:none;box-shadow:0 0 0 2px var(--copper)}
+  .ctl[aria-pressed="true"]{color:var(--copper);background:var(--copper-dim)}
+
+  .banner{display:none;gap:9px;align-items:flex-start;padding:10px 14px;border-bottom:1px solid var(--line);font-size:12.5px;line-height:1.45}
+  .banner.on{display:flex}
+  .banner b{font-weight:600}
+
+  .primary{display:flex;align-items:center;gap:18px;padding:20px 18px 16px}
+  /* viewBox enquadra o arco (centro 59,79 raio 42): sem isso sobram 34px mortos no topo */
+  .gauge{position:relative;width:112px;height:68px;flex:none}
+  .gauge svg{display:block;width:112px;height:68px;overflow:visible}
+  .gauge .track{fill:none;stroke:var(--well);stroke-width:11;stroke-linecap:round}
+  .gauge .fill{fill:none;stroke-width:11;stroke-linecap:round;stroke-dasharray:132;stroke-dashoffset:132;transition:stroke-dashoffset .6s cubic-bezier(.2,.7,.2,1),stroke .3s}
+  .gauge .ticks{stroke:var(--line-hard);stroke-width:1.5}
+  /* dentro do arco: 84px de vao util, o texto nao pode cruzar o traco */
+  .readout{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding-bottom:6px}
+  .num{font-family:var(--display);font-size:30px;font-weight:600;line-height:1;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+  .num sub{font-size:13px;vertical-align:baseline;color:var(--muted);margin-left:1px}
+  .cap{font-family:var(--mono);font-size:8px;letter-spacing:.14em;color:var(--faint);text-transform:uppercase;margin-top:2px;white-space:nowrap}
+
+  .meta{display:flex;flex-direction:column;gap:3px;min-width:0}
+  .label{font-family:var(--mono);font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:var(--muted)}
+  .countdown{font-family:var(--display);font-size:23px;font-weight:600;font-variant-numeric:tabular-nums;line-height:1.15}
+  .sub{font-size:12.5px;color:var(--faint);font-variant-numeric:tabular-nums}
+
+  .rows{display:flex;flex-direction:column;gap:14px;padding:4px 18px 14px}
+  .rows:empty{display:none}
+  .row{display:flex;flex-direction:column;gap:6px}
+  .row .top{display:flex;align-items:baseline;gap:8px}
+  .row .name{font-size:13px;font-weight:600}
+  .row .when{font-family:var(--mono);font-size:10px;color:var(--faint);letter-spacing:.04em}
+  .row .val{margin-left:auto;font-family:var(--display);font-size:15px;font-weight:600;font-variant-numeric:tabular-nums}
+  .bar{position:relative;height:8px;border-radius:99px;background:var(--well);overflow:hidden}
+  /* escala em vez de largura: nao toca layout. O recorte arredondado vem do .bar */
+  .bar i{position:absolute;inset:0;display:block;transform-origin:left center;transform:scaleX(0);transition:transform .5s cubic-bezier(.2,.7,.2,1)}
+  .bar::after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(90deg,transparent 0 calc(10% - 1px),var(--line-hard) calc(10% - 1px) 10%)}
+
+  .spend{margin:0 18px 14px;padding:12px 14px;border-radius:9px;background:var(--panel-hi);border:1px solid var(--line);display:flex;flex-direction:column;gap:8px}
+  .spend.off{display:none}
+  .spend .head{display:flex;align-items:baseline;gap:8px}
+  .money{font-family:var(--display);font-size:19px;font-weight:600;font-variant-numeric:tabular-nums;margin-left:auto}
+  .money span{color:var(--faint);font-size:12px;font-weight:400}
+
+  .foot{display:flex;align-items:center;gap:8px;width:100%;padding:8px 14px;border:0;border-top:1px solid var(--line);background:var(--foot);font-family:var(--mono);font-size:10px;letter-spacing:.08em;color:var(--faint);text-transform:uppercase;cursor:pointer;text-align:left}
+  .foot:hover{color:var(--text)}
+  .foot:focus-visible{outline:none;box-shadow:inset 0 0 0 2px var(--copper)}
+  .dot{width:6px;height:6px;border-radius:99px;flex:none}
+  .foot .right{margin-left:auto}
+  .chev{font-size:9px;transition:transform .25s ease}
+  .foot[aria-expanded="true"] .chev{transform:rotate(180deg)}
+
+  /* aba de tokens: uma linha por modelo, barra proporcional ao maior consumo */
+  .tokens{display:none;padding:14px 18px 4px;border-top:1px solid var(--line)}
+  .tokens.on{display:block}
+  .tokens-head{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+  .tokens-head .label{align-self:baseline}
+  .seg{display:flex;margin-left:auto;border:1px solid var(--line-hard);border-radius:6px;overflow:hidden}
+  .seg button{
+    font-family:var(--mono);font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;
+    padding:3px 8px;border:0;background:transparent;color:var(--muted);cursor:pointer;
+  }
+  .seg button + button{border-left:1px solid var(--line)}
+  .seg button:hover{color:var(--text)}
+  .seg button:focus-visible{outline:none;box-shadow:inset 0 0 0 2px var(--copper)}
+  .seg button[aria-pressed="true"]{background:var(--copper-dim);color:var(--copper);font-weight:600}
+  .spinner{
+    width:9px;height:9px;flex:none;border-radius:99px;
+    border:1.5px solid var(--line-hard);border-top-color:var(--copper);
+    animation:spin .7s linear infinite;
+  }
+  @keyframes spin{to{transform:rotate(360deg)}}
+  /* com 90 dias a lista cresce; rola por dentro em vez de esticar a janela */
+  #tokens-list{max-height:326px;overflow-y:auto;overscroll-behavior:contain}
+  /* desvanece a ultima linha so quando ha mais para rolar: o corte reto parecia defeito */
+  #tokens-list.more{mask-image:linear-gradient(to bottom,#000 calc(100% - 26px),transparent)}
+  #tokens-list::-webkit-scrollbar{width:6px}
+  #tokens-list::-webkit-scrollbar-thumb{background:var(--line-hard);border-radius:99px}
+  .trow{display:flex;flex-direction:column;gap:5px;margin-bottom:11px}
+  .trow .top{display:flex;align-items:baseline;gap:8px}
+  .trow .tname{font-size:12.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .trow .tcalls{font-family:var(--mono);font-size:9.5px;color:var(--faint);letter-spacing:.04em;flex:none}
+  .trow .tval{margin-left:auto;font-family:var(--display);font-size:14px;font-weight:600;font-variant-numeric:tabular-nums;flex:none}
+  .trow .bar{height:6px}
+  .trow.alien .tname{color:var(--muted);font-weight:400}
+  .tokens-note{font-size:11px;line-height:1.45;color:var(--faint);padding-bottom:8px}
+  .tokens-empty{font-size:12.5px;color:var(--muted);padding-bottom:10px}
+  body.compact .tokens,body.compact .chev{display:none}
+
+  /* modo compacto */
+  body.compact .primary{padding:14px 16px 10px;gap:14px}
+  body.compact .gauge,body.compact .gauge svg{width:68px;height:41px}
+  body.compact .num{font-size:19px}
+  body.compact .cap{display:none}
+  body.compact .readout{padding-bottom:2px}
+  body.compact .rows,body.compact .spend,body.compact #reset-at{display:none}
+  body.compact .compact-line{display:block}
+  body.compact .countdown{font-size:20px}
+  .compact-line{display:none;font-size:12px;color:var(--faint);white-space:nowrap}
+
+  body.stale .num,body.stale .val,body.stale .money{color:var(--faint)}
+
+  @media (prefers-reduced-motion: reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="widget">
+
+  <div class="titlebar">
+    <span class="grip"></span>
+    <span class="who">claude&nbsp;·&nbsp;<b id="plan">—</b></span>
+    <button class="ctl" id="pin" aria-pressed="true" title="Fixar sobre outras janelas">▲</button>
+    <button class="ctl" id="refresh" title="Atualizar agora">↻</button>
+    <button class="ctl" id="compact" title="Modo compacto">▢</button>
+    <button class="ctl" id="hide" title="Recolher para a bandeja">—</button>
+  </div>
+
+  <div class="banner" id="banner">
+    <span class="dot" id="banner-dot" style="margin-top:6px"></span>
+    <span id="banner-text"></span>
+  </div>
+
+  <div class="primary">
+    <div class="gauge" title="Sessão de 5 horas">
+      <svg viewBox="10 30 98 60" aria-hidden="true">
+        <path class="track" d="M 17 79 A 42 42 0 1 1 101 79"></path>
+        <path class="fill" id="arc" d="M 17 79 A 42 42 0 1 1 101 79"></path>
+        <g class="ticks">
+          <line x1="59" y1="42" x2="59" y2="47"></line>
+          <line x1="24" y1="72" x2="27" y2="69"></line>
+          <line x1="94" y1="72" x2="91" y2="69"></line>
+        </g>
+      </svg>
+      <div class="readout">
+        <div class="num" id="session-pct">—</div>
+        <div class="cap">5 h</div>
+      </div>
+    </div>
+    <div class="meta">
+      <span class="label" id="meta-label">reinicia em</span>
+      <span class="countdown" id="countdown">—</span>
+      <span class="sub" id="reset-at"></span>
+      <span class="compact-line" id="compact-line"></span>
+    </div>
+  </div>
+
+  <div class="rows" id="rows"></div>
+
+  <div class="spend off" id="spend">
+    <div class="head">
+      <span class="label">créditos extras</span>
+      <span class="money" id="spend-money">—</span>
+    </div>
+    <div class="bar"><i id="spend-bar"></i></div>
+  </div>
+
+  <div class="tokens" id="tokens">
+    <div class="tokens-head">
+      <span class="label">tokens por modelo</span>
+      <span class="spinner" id="tokens-spinner" hidden></span>
+      <div class="seg" id="tokens-range" role="group" aria-label="Período">
+        <button type="button" data-days="7">7 d</button>
+        <button type="button" data-days="30">30 d</button>
+        <button type="button" data-days="90">90 d</button>
+      </div>
+    </div>
+    <div id="tokens-list"></div>
+    <div class="tokens-note" id="tokens-note"></div>
+  </div>
+
+  <button class="foot" id="foot" aria-expanded="false" aria-controls="tokens">
+    <span class="dot" id="status-dot"></span>
+    <span id="status-text">iniciando</span>
+    <span class="right" id="ago"></span>
+    <span class="chev" id="chev">▾</span>
+  </button>
+
+</div>
+<script src="renderer.js"></script>
+</body>
+</html>

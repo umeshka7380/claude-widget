@@ -1,0 +1,76 @@
+{
+  "five_hour": {
+    "utilization": 43.0,
+    "resets_at": "2026-07-28T18:20:00.657047+00:00",
+    "limit_dollars": null,
+    "used_dollars": null,
+    "remaining_dollars": null
+  },
+  "seven_day": {
+    "utilization": 28.0,
+    "resets_at": "2026-08-02T13:00:00.657069+00:00",
+    "limit_dollars": null,
+    "used_dollars": null,
+    "remaining_dollars": null
+  },
+  "seven_day_oauth_apps": null,
+  "seven_day_opus": null,
+  "seven_day_sonnet": null,
+  "seven_day_cowork": null,
+  "extra_usage": {
+    "is_enabled": true,
+    "monthly_limit": 10000,
+    "used_credits": 1234.0,
+    "utilization": 12.34,
+    "currency": "BRL",
+    "decimal_places": 2,
+    "disabled_reason": null,
+    "user_disabled": false,
+    "spend_limit_reached": false,
+    "credits_ever_enabled": true,
+    "daily": null,
+    "weekly": null
+  },
+  "limits": [
+    {
+      "kind": "session",
+      "group": "session",
+      "percent": 43,
+      "severity": "normal",
+      "resets_at": "2026-07-28T18:20:00.657047+00:00",
+      "scope": null,
+      "is_active": true
+    },
+    {
+      "kind": "weekly_all",
+      "group": "weekly",
+      "percent": 28,
+      "severity": "normal",
+      "resets_at": "2026-08-02T13:00:00.657069+00:00",
+      "scope": null,
+      "is_active": false
+    },
+    {
+      "kind": "weekly_scoped",
+      "group": "weekly",
+      "percent": 4,
+      "severity": "normal",
+      "resets_at": "2026-08-02T12:59:59.657400+00:00",
+      "scope": { "model": { "id": null, "display_name": "Fable" }, "surface": null },
+      "is_active": false
+    }
+  ],
+  "spend": {
+    "used": { "amount_minor": 1234, "currency": "BRL", "exponent": 2 },
+    "limit": { "amount_minor": 10000, "currency": "BRL", "exponent": 2 },
+    "percent": 12,
+    "severity": "normal",
+    "enabled": true,
+    "disabled_reason": null,
+    "balance": null,
+    "auto_reload": null,
+    "can_purchase_credits": false,
+    "can_toggle": false
+  },
+  "member_dashboard_available": false
+}

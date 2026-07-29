@@ -1,0 +1,17 @@
+node_modules/
+
+# Saídas de execução: contêm dados da conta local (validade do token, uso, caminhos)
+token-observation.log
+token-observation.pid
+autostart.out
+check-autostart.out
+*.log
+
+# Pacote gerado por `npm run empacotar`
+claude-widget.zip
+
+# Cache de ferramentas locais
+.impeccable/
+
+# Plano de desenvolvimento: fica só na máquina, fora do repositório
+specs/

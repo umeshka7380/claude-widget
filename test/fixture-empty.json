@@ -1,0 +1,15 @@
+{
+  "five_hour": null,
+  "seven_day": null,
+  "seven_day_opus": null,
+  "limits": [],
+  "spend": {
+    "used": null,
+    "limit": null,
+    "percent": null,
+    "severity": "normal",
+    "enabled": false,
+    "disabled_reason": "not_enabled"
+  },
+  "member_dashboard_available": false
+}
